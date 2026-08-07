@@ -1,1 +1,17 @@
+- name: Show runner specs
+  run: |
+    echo "===== CPU ====="
+    lscpu
+    echo
 
+    echo "===== Memory ====="
+    free -h
+    echo
+
+    echo "===== Disk ====="
+    df -h
+    echo
+
+    echo "===== OS ====="
+    uname -a
+    cat /etc/os-release
