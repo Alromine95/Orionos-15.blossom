@@ -29,7 +29,10 @@ jobs:
           
           mkdir -p ~/yaap && cd ~/yaap
           # Pull down metadata only
-          repo init -u https://github.com -b sixteen --depth=1 --no-tags --clone-bundle=false
+          repo init -u https://github.com/yaap/manifest.git -b sixteen --git-lfs --depth=1 --no-tags --clone-bundle=false
+
+          #GIT CLONE DT
+          git clone https://github.com/Alromine95/Local-manifest.git -b main .repo/local_manifests;
           
           # Clone core repository trees safely
           repo sync -c -j4 --no-clone-bundle --no-tags --current-branch
