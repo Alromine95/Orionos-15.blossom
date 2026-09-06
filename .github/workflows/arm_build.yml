@@ -13,12 +13,19 @@ jobs:
           sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc
           sudo docker image prune --all --force
 
-      - name: Configure Swap
-        run: |
-          sudo fallocate -l 14G /swapfile
-          sudo chmod 600 /swapfile
-          sudo mkswap /swapfile
-          sudo swapon /swapfile
+          - name: Configure Swap
+          run: |
+            # 1. Turn off the active swap file to free it up
+             sudo swapoff -a || true
+    
+             # 2. Allocate the new 14GB size
+             sudo fallocate -l 14G /swapfile
+    
+             # 3. Secure and activate the new swap space
+             sudo chmod 600 /swapfile
+             sudo mkswap /swapfile
+             sudo swapon /swapfile
+
 
       - name: Extreme Minimal Sync (YAAP 16)
         run: |
