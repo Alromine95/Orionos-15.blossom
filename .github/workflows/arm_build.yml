@@ -1,0 +1,49 @@
+name: Zero-Queue Native ARM Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build_android:
+    # This magic label grabs the upgraded 4-vCPU ARM machine instantly
+    runs-on: ubuntu-24.04-arm 
+    steps:
+      - name: Wipe Environment & Maximize Disk
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc
+          sudo docker image prune --all --force
+
+      - name: Configure Swap
+        run: |
+          sudo fallocate -l 14G /swapfile
+          sudo chmod 600 /swapfile
+          sudo mkswap /swapfile
+          sudo swapon /swapfile
+
+      - name: Extreme Minimal Sync (YAAP 16)
+        run: |
+          mkdir -p ~/bin
+          curl https://googleapis.com > ~/bin/repo
+          chmod a+x ~/bin/repo
+          export PATH=~/bin:$PATH
+          
+          mkdir -p ~/yaap && cd ~/yaap
+          # Pull down metadata only
+          repo init -u https://github.com -b sixteen --depth=1 --no-tags --clone-bundle=false
+          
+          # Clone core repository trees safely
+          repo sync -c -j4 --no-clone-bundle --no-tags --current-branch
+
+      - name: Compile Initial Subsystem Modules
+        run: |
+          cd ~/yaap
+          export PATH=~/bin:$PATH
+          export USE_CCACHE=1
+          ccache -M 15G
+          
+          export SOONG_ALLOW_MISSING_DEPENDENCIES=true
+          export WITHOUT_CHECK_API=true
+          
+          source build/envsetup.sh
+          # Target individual small modules to generate cache without throwing disk errors
+          # make selinux_policy
