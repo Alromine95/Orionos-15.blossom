@@ -1,61 +1,14 @@
-name: Zero-Queue Native ARM Build
-
-on:
-  workflow_dispatch:
+name: Free SSH Server
+on: [workflow_dispatch] # Allows you to start it manually
 
 jobs:
-  build_android:
-    runs-on: ubuntu-24.04-arm 
+  connect:
+    runs-on: ubuntu-latest
     steps:
-      - name: Wipe Environment & Maximize Disk
-        run: |
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /usr/local/lib/android
-          sudo rm -rf /opt/ghc
-          sudo docker image prune --all --force
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Configure Swap
-        run: |
-          # 1. Turn off the active swap file to free it up
-          sudo swapoff -a || true
-          
-          # 2. Allocate the new 14GB size
-          sudo fallocate -l 14G /swapfile
-          
-          # 3. Secure and activate the new swap space
-          sudo chmod 600 /swapfile
-          sudo mkswap /swapfile
-          sudo swapon /swapfile
-
-      - name: Extreme Minimal Sync (YAAP 16)
-        run: |
-          mkdir -p ~/bin
-          # FIXED: Download from the official Google source link
-          curl https://googleapis.com > ~/bin/repo
-          chmod a+x ~/bin/repo
-          export PATH=~/bin:$PATH
-          
-          mkdir -p ~/yaap && cd ~/yaap
-          
-          # Pull down metadata only
-          repo init -u https://github.com/yaap/manifest.git -b sixteen --git-lfs --depth=1 --no-tags --clone-bundle=false
-
-          # Pull blossom local manifest trees
-          git clone https://github.com/Alromine95/Local-manifest.git -b main .repo/local_manifests
-          
-          # Clone core repository trees safely
-          repo sync -c -j4 --no-clone-bundle --no-tags --current-branch
-
-      - name: Compile Initial Subsystem Modules
-        run: |
-          cd ~/yaap
-          export PATH=~/bin:$PATH
-          export USE_CCACHE=1
-          ccache -M 15G
-          
-          export SOONG_ALLOW_MISSING_DEPENDENCIES=true
-          export WITHOUT_CHECK_API=true
-          
-          source build/envsetup.sh
-          # Target individual small modules to generate cache without throwing disk errors
-          # make selinux_policy
+      - name: Setup Tmate Session
+        uses: mxschmitt/action-tmate@v3
+        with:
+          limit-access-to-actor: true # Secures the session to your GitHub account only
