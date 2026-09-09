@@ -1,14 +1,86 @@
-name: Free SSH Server
-on: [workflow_dispatch] # Allows you to start it manually
+name: YAAP Android 14 Custom ROM Compiler
+
+on:
+  workflow_dispatch: # Allows you to trigger the build manually via a button on GitHub
 
 jobs:
-  connect:
+  compile:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    - name: Maximize GitHub Runner Storage Space
+      run: |
+        echo "Purging pre-installed software bloat to clear up space..."
+        sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc "/usr/local/share/boost"
+        sudo apt-get clean
+        docker rmi $(docker images -q) 2>/dev/null || true
+        df -h
 
-      - name: Setup Tmate Session
-        uses: mxschmitt/action-tmate@v3
-        with:
-          limit-access-to-actor: true # Secures the session to your GitHub account only
+    - name: Install Android Build Dependencies
+      run: |
+        sudo DEBIAN_FRONTEND=noninteractive apt-get update
+        sudo DEBIAN_FRONTEND=noninteractive apt-get install -y bc bison build-essential ccache curl git rsync openssh-client
+
+    - name: Configure Secure Network Tunnel to SourceForge
+      env:
+        SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      run: |
+        mkdir -p ~/.ssh
+        echo "$SSH_KEY" > ~/.ssh/id_ed25519
+        chmod 600 ~/.ssh/id_ed25519
+        ssh-keyscan -t rsa frs.sourceforge.net >> ~/.ssh/known_hosts
+
+    - name: Pull Compilation Cache Profile from SourceForge
+      env:
+        SF_USER: ${{ secrets.SF_USER }}
+        SF_PROJECT: ${{ secrets.SF_PROJECT }}
+      run: |
+        mkdir -p ~/.ccache
+        echo "Downloading previous compiler cache..."
+        rsync -avz -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no" $SF_USER@frs.sourceforge.net:/home/frs/project/$SF_PROJECT/ccache/ ~/.ccache/ || echo "Starting fresh cache build."
+
+    - name: Initialize YAAP Source & Inject Custom Manifest
+      run: |
+        mkdir -p ~/bin
+        curl https://googleapis.com > ~/bin/repo
+        chmod a+x ~/bin/repo
+        export PATH=~/bin:$PATH
+        
+        mkdir -p ~/rom && cd ~/rom
+        # Initialize YAAP Android 14 Core Tree
+        repo init -u https://github.com/yaap/manifest.git -b sixteen --depth=1 --groups=all,-notdefault,-device,-partner        
+        # Inject your local_manifests project file directly
+        mkdir -p .repo/local_manifests
+        git clone https://github.com/Alromine95/Local-manifest.git -b main .repo/local_manifests
+
+        
+        echo "=== EXECUTING INTEGRATED SYNCHRONIZATION VIA LOW-SPACE FLAGS ==="
+        repo sync -c -j$(nproc) --force-sync --no-clone-bundle --no-tags --prune
+
+    - name: Run ROM Compilation Engine
+      env:
+        SF_USER: ${{ secrets.SF_USER }}
+        SF_PROJECT: ${{ secrets.SF_PROJECT }}
+      run: |
+        export PATH=~/bin:$PATH
+        export USE_CCACHE=1
+        export CCACHE_DIR=~/.ccache
+        ccache -M 40G
+        
+        cd ~/rom
+        # Build commands block execution wrapper
+        source build/envsetup.sh
+        lunch yaap_blossom-bp2a-userdebug
+        m yaap
+        
+        # We wrap the compilation tool in a 5.5-hour time window to make sure 
+        # it stops early enough to back up your progress to SourceForge before GitHub cuts it off!
+        timeout 5.5h m yaap || echo "Build timed out or finished. Proceeding to cache backup."
+
+    - name: Offload Updated Compiler Cache to SourceForge
+      if: always() # This forces the backup to run even if your build fails or hits a time limit
+      env:
+        SF_USER: ${{ secrets.SF_USER }}
+        SF_PROJECT: ${{ secrets.SF_PROJECT }}
+      run: |
+        echo "Uploading newly compiled cache blocks up to aosp-blossom..."
+        rsync -avz -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no" ~/.ccache/ $SF_USER@frs.sourceforge.net:/home/frs/project/$SF_PROJECT/ccache/
