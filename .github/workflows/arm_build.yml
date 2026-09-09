@@ -5,7 +5,7 @@ on:
 
 jobs:
   build:
-    runs-on: self-hosted   # <-- REQUIRES your own registered runner (VM/PC with real disk+RAM)
+    runs-on: ubuntu-22.04   # <-- REQUIRES your own registered runner (VM/PC with real disk+RAM)
     steps:
       - name: Install dependencies
         run: |
