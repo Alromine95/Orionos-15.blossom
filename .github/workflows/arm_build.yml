@@ -41,17 +41,18 @@ jobs:
     - name: Initialize YAAP Source & Inject Custom Manifest
       run: |
         mkdir -p ~/bin
-        curl https://googleapis.com > ~/bin/repo
+        # FIX: Swapped to the official direct binary un-redirected source mirror tracking path
+        curl -sSL https://googleapis.com > ~/bin/repo
         chmod a+x ~/bin/repo
         export PATH=~/bin:$PATH
         
         mkdir -p ~/rom && cd ~/rom
         # Initialize YAAP Android 14 Core Tree
-        repo init -u https://github.com/yaap/manifest.git -b sixteen --depth=1 --groups=all,-notdefault,-device,-partner        
+         repo init -u https://github.com/yaap/manifest.git -b sixteen --depth=1 --groups=all,-notdefault,-device,-partner
+        
         # Inject your local_manifests project file directly
         mkdir -p .repo/local_manifests
         git clone https://github.com/Alromine95/Local-manifest.git -b main .repo/local_manifests
-
         
         echo "=== EXECUTING INTEGRATED SYNCHRONIZATION VIA LOW-SPACE FLAGS ==="
         repo sync -c -j$(nproc) --force-sync --no-clone-bundle --no-tags --prune
@@ -67,17 +68,14 @@ jobs:
         ccache -M 40G
         
         cd ~/rom
-        # Build commands block execution wrapper
         source build/envsetup.sh
         lunch yaap_blossom-bp2a-userdebug
-        m yaap
         
-        # We wrap the compilation tool in a 5.5-hour time window to make sure 
-        # it stops early enough to back up your progress to SourceForge before GitHub cuts it off!
+        # Wrapped compilation in a 5.5-hour time window to guarantee cache upload before runner limits hit
         timeout 5.5h m yaap || echo "Build timed out or finished. Proceeding to cache backup."
 
     - name: Offload Updated Compiler Cache to SourceForge
-      if: always() # This forces the backup to run even if your build fails or hits a time limit
+      if: always() # Forces backup execution even if compilation breaks or times out
       env:
         SF_USER: ${{ secrets.SF_USER }}
         SF_PROJECT: ${{ secrets.SF_PROJECT }}
