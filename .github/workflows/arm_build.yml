@@ -1,84 +1,89 @@
-name: YAAP Android 14 Custom ROM Compiler
+name: Build YAAP for blossom
 
 on:
-  workflow_dispatch: # Allows you to trigger the build manually via a button on GitHub
+  workflow_dispatch:
 
 jobs:
-  compile:
-    runs-on: ubuntu-latest
+  build:
+    runs-on: self-hosted   # <-- REQUIRES your own registered runner (VM/PC with real disk+RAM)
     steps:
-    - name: Maximize GitHub Runner Storage Space
-      run: |
-        echo "Purging pre-installed software bloat to clear up space..."
-        sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc "/usr/local/share/boost"
-        sudo apt-get clean
-        docker rmi $(docker images -q) 2>/dev/null || true
-        df -h
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git-core gnupg flex bison build-essential zip curl \
+            zlib1g-dev libc6-dev-i386 x11proto-core-dev libx11-dev lib32z1-dev \
+            libgl1-mesa-dev libxml2-utils xsltproc unzip fontconfig ccache patchelf \
+            coreutils openjdk-17-jdk
 
-    - name: Install Android Build Dependencies
-      run: |
-        sudo DEBIAN_FRONTEND=noninteractive apt-get update
-        sudo DEBIAN_FRONTEND=noninteractive apt-get install -y bc bison build-essential ccache curl git rsync openssh-client
+      - name: Install repo tool
+        run: |
+          mkdir -p ~/bin
+          curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
+          chmod a+x ~/bin/repo
+          echo "$HOME/bin" >> $GITHUB_PATH
 
-    - name: Configure Secure Network Tunnel to SourceForge
-      env:
-        SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-      run: |
-        mkdir -p ~/.ssh
-        echo "$SSH_KEY" > ~/.ssh/id_ed25519
-        chmod 600 ~/.ssh/id_ed25519
-        ssh-keyscan -t rsa frs.sourceforge.net >> ~/.ssh/known_hosts
+      - name: Repo init
+        run: |
+          mkdir -p ~/yaap-src && cd ~/yaap-src
+          repo init -u https://github.com/yaap/manifest.git -b sixteen --depth=1 --git-lfs
 
-    - name: Pull Compilation Cache Profile from SourceForge
-      env:
-        SF_USER: ${{ secrets.SF_USER }}
-        SF_PROJECT: ${{ secrets.SF_PROJECT }}
-      run: |
-        mkdir -p ~/.ccache
-        echo "Downloading previous compiler cache..."
-        rsync -avz -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no" $SF_USER@frs.sourceforge.net:/home/frs/project/$SF_PROJECT/ccache/ ~/.ccache/ || echo "Starting fresh cache build."
+      - name: Add local manifest
+        run: |
+          cd ~/yaap-src
+          mkdir -p .repo/local_manifests
+          cat > .repo/local_manifests/local_manifests.xml << 'EOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <manifest>
+            <remote name="gh" fetch="https://github.com" />
+            <remote name="gitlab1" fetch="https://gitlab.com" />
+            <remote name="cb" fetch="https://codeberg.org" />
+            <remote name="ab" fetch="https://github.com/Alromine95" />
+            <project name="device_xiaomi_blossom" path="device/xiaomi/blossom" remote="ab" revision="16.2" />
+            <project name="HaiKito18/android_device_mediatek_sepolicy_vndr_lineage23" path="device/mediatek/sepolicy_vndr" remote="gh" revision="lineage-23.2" />
+            <project name="HaiKito18/vendor_xiaomi_miuicamera" path="vendor/xiaomi/miuicamera" remote="gh" revision="main" />
+            <project name="haikito18/proprietary_vendor_xiaomi_blossom" path="vendor/xiaomi/blossom" remote="gitlab1" revision="A16-qpr2" />
+            <project path="device/xiaomi/blossom-kernel" name="xc112lg/android_device_xiaomi_blossom-kernel" remote="gh" revision="main">
+              <linkfile src="headers" dest="kernel/xiaomi/blossom" />
+            </project>
+            <project path="hardware/mediatek" name="haikito18/android_hardware_mediatek" remote="gitlab1" revision="lineage-23.2" />
+            <project name="HaiKito18/ViaBrowser" path="packages/apps/ViaBrowser" remote="gh" revision="main" />
+            <project name="HaiKito18/Dolby-blossom" path="hardware/dolby" remote="cb" revision="sony-1.5" />
+            <project path="packages/apps/RevampedFMRadio" name="TracenPlayground/packages_apps_RevampedFMRadio" remote="gh" revision="mtk" />
+            <remove-project path="packages/apps/FMRadio"/>
+          </manifest>
+          EOF
 
-    - name: Initialize YAAP Source & Inject Custom Manifest
-      run: |
-        mkdir -p ~/bin
-        # FIX: Swapped to the official direct binary un-redirected source mirror tracking path
-        curl -sSL https://googleapis.com > ~/bin/repo
-        chmod a+x ~/bin/repo
-        export PATH=~/bin:$PATH
-        
-        mkdir -p ~/rom && cd ~/rom
-        # Initialize YAAP Android 14 Core Tree
-         repo init -u https://github.com/yaap/manifest.git -b sixteen --depth=1 --groups=all,-notdefault,-device,-partner
-        
-        # Inject your local_manifests project file directly
-        mkdir -p .repo/local_manifests
-        git clone https://github.com/Alromine95/Local-manifest.git -b main .repo/local_manifests
-        
-        echo "=== EXECUTING INTEGRATED SYNCHRONIZATION VIA LOW-SPACE FLAGS ==="
-        repo sync -c -j$(nproc) --force-sync --no-clone-bundle --no-tags --prune
+      - name: Repo sync
+        run: |
+          cd ~/yaap-src
+          repo sync -c -j$(nproc) --force-sync --no-clone-bundle --no-tags
 
-    - name: Run ROM Compilation Engine
-      env:
-        SF_USER: ${{ secrets.SF_USER }}
-        SF_PROJECT: ${{ secrets.SF_PROJECT }}
-      run: |
-        export PATH=~/bin:$PATH
-        export USE_CCACHE=1
-        export CCACHE_DIR=~/.ccache
-        ccache -M 40G
-        
-        cd ~/rom
-        source build/envsetup.sh
-        lunch yaap_blossom-bp2a-userdebug
-        
-        # Wrapped compilation in a 5.5-hour time window to guarantee cache upload before runner limits hit
-        timeout 5.5h m yaap || echo "Build timed out or finished. Proceeding to cache backup."
+      - name: Fix build_soong source
+        run: |
+          cd ~/yaap-src
+          rm -rf build/soong
+          git clone https://github.com/yaap/build_soong.git -b sixteen build/soong
+          sed -i 's/"golang.org\/x\/exp\/maps"/& \n\t"sort"/' build/soong/ui/execution_metrics/execution_metrics.go
+          sed -i 's/slices\.Sorted(maps\.Keys(\([^)]*\)))/func() []string { keys := make([]string, 0, len(\1)); for k := range \1 { keys = append(keys, k) }; sort.Strings(keys); return keys }()/' build/soong/ui/execution_metrics/execution_metrics.go
 
-    - name: Offload Updated Compiler Cache to SourceForge
-      if: always() # Forces backup execution even if compilation breaks or times out
-      env:
-        SF_USER: ${{ secrets.SF_USER }}
-        SF_PROJECT: ${{ secrets.SF_PROJECT }}
-      run: |
-        echo "Uploading newly compiled cache blocks up to aosp-blossom..."
-        rsync -avz -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no" ~/.ccache/ $SF_USER@frs.sourceforge.net:/home/frs/project/$SF_PROJECT/ccache/
+      - name: Build
+        run: |
+          cd ~/yaap-src
+          source build/envsetup.sh
+          lunch yaap_blossom-bp2a-userdebug
+          m installclean
+          m yaap
+
+      - name: Upload to SourceForge
+        env:
+          SF_USER: ${{ secrets.SF_USERNAME }}
+          SF_API_KEY: ${{ secrets.SF_API_KEY }}
+        run: |
+          cd ~/yaap-src
+          ZIP=$(find out/target/product/blossom -maxdepth 1 -type f -name "*.zip" | head -n 1)
+          if [ -n "$ZIP" ]; then
+            rsync -avP -e ssh "$ZIP" "${SF_USER}@frs.sourceforge.net:/home/frs/project/YOUR_PROJECT_NAME/"
+          else
+            echo "No ROM ZIP found!"
+            exit 1
+          fi
