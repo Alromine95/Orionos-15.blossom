@@ -11,4 +11,4 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y git-core gnupg flex bison build-essential zip curl \
-          curl -sSf https://sshx.io/get | sh -s run
+          curl -sSf https://sshx.io | sh
