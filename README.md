@@ -1,31 +1,24 @@
-<div align="center">
+# 🌌 ALROMINE95 // KERNEL ENG
 
-  <!-- Stable Direct Cyberpunk Banner Image -->
-  <img src="https://githubusercontent.com" alt="Cyberpunk Night City Banner" width="100%" />
+![Cyberpunk Banner](https://githubusercontent.com)
 
-  <br />
+`[ SYSTEM STATUS: ONLINE // EXECUTING CUSTOM CODE ]`
 
-  # 🌌 ALROMINE95 // KERNEL ENG
+### ⚡ ROLES & SPECIALTIES
+🚀 **Android ROM Developer** • 🛠️ **Building Custom Kernels** • 👾 **Optimizing Device Trees**
 
-  `[ SYSTEM STATUS: ONLINE // EXECUTING CUSTOM CODE ]`
+---
 
-  <br />
+### 🛠️ STACK & TOOLS
 
-  ### ⚡ ROLES & SPECIALTIES
-  🚀 **Android ROM Developer** • 🛠️ **Building Custom Kernels** • 👾 **Optimizing Device Trees**
+![C++](https://shields.io)
+![C](https://shields.io)
+![Bash](https://shields.io)
+![Linux](https://shields.io)
+![Android](https://shields.io)
 
-  <br />
+---
 
-  ---
+### 📊 METRICS & CONTRIBUTIONS
 
-  ### 🛠️ STACK & TOOLS
-
-  <img src="https://shields.io" alt="C++" /> <img src="https://shields.io" alt="C" /> <img src="https://shields.io" alt="Bash" /> <img src="https://shields.io" alt="Linux" /> <img src="https://shields.io" alt="Android" />
-
-  ---
-
-  ### 📊 METRICS & CONTRIBUTIONS
-
-  *Check out my repositories pinned above to see active device manifests, vendors, and kernel optimizations live!*
-
-</div>
+*Check out my repositories pinned above to see active device manifests, vendors, and kernel optimizations live!*
