@@ -5,14 +5,14 @@
 
   <br />
 
-  # 🌌 ALROMINE95 // KERNEL ENG
+  # 🌌 ALROMINE95 // DEV
 
   `[ SYSTEM STATUS: ONLINE // EXECUTING CUSTOM CODE ]`
 
   <br />
 
   ### ⚡ ROLES & SPECIALTIES
-  🚀 **Android ROM Developer** • 🛠️ **Building Custom Kernels** • 👾 **Optimizing Device Trees**
+  🚀 **Android ROM Developer** • 🛠️ **Building Custom Recoveries** • 👾 **Optimizing Device Trees**
 
   <br />
 
@@ -24,8 +24,8 @@
 
   ---
 
-  ### 📊 METRICS & CONTRIBUTIONS
+  ### 💙 Quotes 
 
-  *Check out my repositories pinned above to see active device manifests, vendors, and kernel optimizations live!*
+  *Through the heaven and earth i alone the honored one*
 
 </div>
