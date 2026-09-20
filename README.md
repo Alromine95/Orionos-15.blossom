@@ -5,7 +5,7 @@
 
   <br />
 
-  # 🌌 ALROMINE95 // DEV
+  # 🌌 The honored one // DEV
 
   `[ SYSTEM STATUS: ONLINE // EXECUTING CUSTOM CODE ]`
 
@@ -27,5 +27,10 @@
   ### 💙 Quotes 
 
   *Through the heaven and earth i alone the honored one*
+
+  ### 🩹 learning
+T
+ `[ Currently i am learning python and java script]`
+  
 
 </div>
