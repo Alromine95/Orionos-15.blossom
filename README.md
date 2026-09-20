@@ -1,7 +1,7 @@
 <div align="center">
 
-  <!-- Cyberpunk Night City Banner Landscape -->
-  <img src="https://alphacoders.com" alt="Cyberpunk Night City Banner" width="100%" />
+  <!-- Stable Direct Cyberpunk Banner Image -->
+  <img src="https://githubusercontent.com" alt="Cyberpunk Night City Banner" width="100%" />
 
   <br />
 
