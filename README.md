@@ -1,6 +1,9 @@
 # 🌌 ALROMINE95 // KERNEL ENG
 
-![Cyberpunk Banner](https://githubusercontent.com)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://github.com">
+  <img alt="Cyberpunk Night City Banner" src="https://github.com">
+</picture>
 
 `[ SYSTEM STATUS: ONLINE // EXECUTING CUSTOM CODE ]`
 
@@ -11,11 +14,11 @@
 
 ### 🛠️ STACK & TOOLS
 
-![C++](https://shields.io)
-![C](https://shields.io)
-![Bash](https://shields.io)
-![Linux](https://shields.io)
-![Android](https://shields.io)
+<a href="https://github.com"><img src="https://shields.io" alt="C++" /></a>
+<a href="https://github.com"><img src="https://shields.io" alt="C" /></a>
+<a href="https://github.com"><img src="https://shields.io" alt="Bash" /></a>
+<a href="https://github.com"><img src="https://shields.io" alt="Linux" /></a>
+<a href="https://github.com"><img src="https://shields.io" alt="Android" /></a>
 
 ---
 
