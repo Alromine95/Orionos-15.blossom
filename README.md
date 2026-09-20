@@ -1,6 +1,6 @@
 # 🌌 ALROMINE95 // DEV
 
-![Cyberpunk Banner](https://githubusercontent.com)
+![image]([https://githubusercontent.com](https://github.com/Alromine95/Orionos-15.blossom/blob/main/jpg.jpg))
 
 `[ SYSTEM STATUS: OFFLINE // EXECUTING CUSTOM CODE ]`
 
