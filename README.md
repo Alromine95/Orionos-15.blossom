@@ -1,8 +1,8 @@
-# 🌌 ALROMINE95 // KERNEL ENG
+# 🌌 ALROMINE95 // DEV
 
 ![Cyberpunk Banner](https://githubusercontent.com)
 
-`[ SYSTEM STATUS: ONLINE // EXECUTING CUSTOM CODE ]`
+`[ SYSTEM STATUS: OFFLINE // EXECUTING CUSTOM CODE ]`
 
 ### ⚡ ROLES & SPECIALTIES
 🚀 **Android ROM Developer** • 🛠️ **Building Custom Kernels** • 👾 **Optimizing Device Trees**
