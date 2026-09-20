@@ -1,7 +1,7 @@
 <div align="center">
 
-  <!-- Your Custom Orionos-15.blossom Banner Image -->
-  <img src="https://githubusercontent.com" alt="Cyberpunk Night City Banner" width="100%" />
+  <!-- Uses your repository's local image directly -->
+  <img src="jpg.jpg" alt="Cyberpunk Night City Banner" width="100%" />
 
   <br />
 
