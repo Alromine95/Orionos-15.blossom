@@ -1,24 +1,21 @@
 # 🌌 ALROMINE95 // KERNEL ENG
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://github.com">
-  <img alt="Cyberpunk Night City Banner" src="https://github.com">
-</picture>
+![Banner Image](https://githubusercontent.com)
 
-`[ SYSTEM STATUS: ONLINE // EXECUTING CUSTOM CODE ]`
+[ SYSTEM STATUS: ONLINE // EXECUTING CUSTOM CODE ]
 
 ### ⚡ ROLES & SPECIALTIES
-🚀 **Android ROM Developer** • 🛠️ **Building Custom Kernels** • 👾 **Optimizing Device Trees**
+🚀 Android ROM Developer • 🛠️ Building Custom Kernels • 👾 Optimizing Device Trees
 
 ---
 
 ### 🛠️ STACK & TOOLS
 
-<a href="https://github.com"><img src="https://shields.io" alt="C++" /></a>
-<a href="https://github.com"><img src="https://shields.io" alt="C" /></a>
-<a href="https://github.com"><img src="https://shields.io" alt="Bash" /></a>
-<a href="https://github.com"><img src="https://shields.io" alt="Linux" /></a>
-<a href="https://github.com"><img src="https://shields.io" alt="Android" /></a>
+![C++](https://shields.io)
+![C](https://shields.io)
+![Bash](https://shields.io)
+![Linux](https://shields.io)
+![Android](https://shields.io)
 
 ---
 
