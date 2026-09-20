@@ -1,24 +1,31 @@
-# 🌌 ALROMINE95 // DEV
+<div align="center">
 
-![image]([https://githubusercontent.com](https://github.com/Alromine95/Orionos-15.blossom/blob/main/jpg.jpg))
+  <!-- Your Custom Orionos-15.blossom Banner Image -->
+  <img src="https://githubusercontent.com" alt="Cyberpunk Night City Banner" width="100%" />
 
-`[ SYSTEM STATUS: OFFLINE // EXECUTING CUSTOM CODE ]`
+  <br />
 
-### ⚡ ROLES & SPECIALTIES
-🚀 **Android ROM Developer** • 🛠️ **Building Custom Kernels** • 👾 **Optimizing Device Trees**
+  # 🌌 ALROMINE95 // KERNEL ENG
 
----
+  `[ SYSTEM STATUS: ONLINE // EXECUTING CUSTOM CODE ]`
 
-### 🛠️ STACK & TOOLS
+  <br />
 
-![C++](https://shields.io)
-![C](https://shields.io)
-![Bash](https://shields.io)
-![Linux](https://shields.io)
-![Android](https://shields.io)
+  ### ⚡ ROLES & SPECIALTIES
+  🚀 **Android ROM Developer** • 🛠️ **Building Custom Kernels** • 👾 **Optimizing Device Trees**
 
----
+  <br />
 
-### 📊 METRICS & CONTRIBUTIONS
+  ---
 
-*Check out my repositories pinned above to see active device manifests, vendors, and kernel optimizations live!*
+  ### 🛠️ STACK & TOOLS
+
+  <img src="https://shields.io" alt="C++" /> <img src="https://shields.io" alt="C" /> <img src="https://shields.io" alt="Bash" /> <img src="https://shields.io" alt="Linux" /> <img src="https://shields.io" alt="Android" />
+
+  ---
+
+  ### 📊 METRICS & CONTRIBUTIONS
+
+  *Check out my repositories pinned above to see active device manifests, vendors, and kernel optimizations live!*
+
+</div>
