@@ -21,7 +21,7 @@
   ### 🛠️ Hobbies
 
 `Eating
-sleeping`
+sleeping 😃`
 
   ---
 
@@ -29,9 +29,5 @@ sleeping`
 
   *Through the heaven and earth i alone the honored one*
 
-  ### 🩹 learning
-
- `[ Currently i am learning python and java script]`
-  
 
 </div>
