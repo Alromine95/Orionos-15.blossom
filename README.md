@@ -7,7 +7,7 @@
 
   # 🌌 The honored one // DEV
 
-  `[ SYSTEM STATUS: ONLINE // EXECUTING CUSTOM CODE ]`
+  `[ SYSTEM STATUS: OFFLINE // EXECUTING CUSTOM CODE ]`
 
   <br />
 
