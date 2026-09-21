@@ -18,9 +18,10 @@
 
   ---
 
-  ### 🛠️ STACK & TOOLS
+  ### 🛠️ Hobbies
 
-  <img src="https://shields.io" alt="C++" /> <img src="https://shields.io" alt="C" /> <img src="https://shields.io" alt="Bash" /> <img src="https://shields.io" alt="Linux" /> <img src="https://shields.io" alt="Android" />
+`Eating
+sleeping`
 
   ---
 
@@ -29,7 +30,7 @@
   *Through the heaven and earth i alone the honored one*
 
   ### 🩹 learning
-T
+
  `[ Currently i am learning python and java script]`
   
 
