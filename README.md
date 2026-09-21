@@ -43,11 +43,14 @@
 
   ---
 
-  `╔══════════════════════════════════════╗`  
-  `║  🌌 CYBERPUNK // TOKYO NIGHT MODE    ║`  
-  `║  ⚡ SYSTEM: ARCH LINUX               ║`  
-  `║  👾 STATUS: BUILDING                 ║`
-  `║  🤖 RAM: 8GB                         ║`
-  `╚══════════════════════════════════════╝`
+ ```text
+╔══════════════════════════════════════╗
+║  🌌 CYBERPUNK // TOKYO NIGHT MODE    ║
+║  ⚡ SYSTEM: ARCH LINUX               ║
+║  👾 STATUS: BUILDING                 ║
+║  🤖 RAM: 8GB                         ║
+╚══════════════════════════════════════╝
+```
+
 
 </div>
