@@ -43,16 +43,16 @@
 
   ---
 
- ```
+ 
 <pre align="center">
 ╔══════════════════════════════════════╗
 ║  🌌 CYBERPUNK // TOKYO NIGHT MODE    ║
 ║  ⚡ SYSTEM: ARCH LINUX               ║
-║  👾 STATUS: BUILDING                ║
-║  🤖 RAM: 8GB                        ║
+║  👾 STATUS: BUILDING                 ║
+║  🤖 RAM: 8GB                         ║
 ╚══════════════════════════════════════╝
 </pre>
-```
+
 
 
 
