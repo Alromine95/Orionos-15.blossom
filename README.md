@@ -10,12 +10,12 @@
   `[ SYSTEM STATUS: OFFLINE // EXECUTING CUSTOM CODE ]`
 
   <br />
+  
+<img src="https://img.shields.io/badge/STATUS-OFFLINE-00ffff?style=flat&labelColor=0d1117" />
+<img src="https://img.shields.io/badge/FOCUS-ANDROID-ff00ff?style=flat&labelColor=0d1117" />
+<img src="https://img.shields.io/badge/MODE-CUSTOM%20CODE-7a5cff?style=flat&labelColor=0d1117" />
 
-  <img src="https://img.shields.io/badge/STATUS-OFFLINE-00ffff?style=for-the-badge&labelColor=0d1117" />
-  <img src="https://img.shields.io/badge/FOCUS-ANDROID-ff00ff?style=for-the-badge&labelColor=0d1117" />
-  <img src="https://img.shields.io/badge/MODE-CUSTOM%20CODE-7a5cff?style=for-the-badge&labelColor=0d1117" />
-
-  <br /><br />
+  <br />
 
   ### ⚡ ROLES & SPECIALTIES
 
