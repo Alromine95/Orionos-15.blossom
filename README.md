@@ -44,9 +44,10 @@
   ---
 
   `╔══════════════════════════════════════╗`  
-  `║  🌌 CYBERPUNK // TOKYO NIGHT MODE   ║`  
-  `║  ⚡ SYSTEM: CUSTOM                  ║`  
-  `║  👾 STATUS: BUILDING                ║`  
+  `║  🌌 CYBERPUNK // TOKYO NIGHT MODE    ║`  
+  `║  ⚡ SYSTEM: ARCH LINUX               ║`  
+  `║  👾 STATUS: BUILDING                 ║`
+  `║  🤖 RAM: 8GB                         ║`
   `╚══════════════════════════════════════╝`
 
 </div>
