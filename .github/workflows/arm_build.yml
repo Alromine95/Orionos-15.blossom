@@ -1,4 +1,4 @@
-name: Ngrok SSH ROM Builder
+name: Raw Ngrok SSH ROM Builder
 on: workflow_dispatch
 
 jobs:
@@ -18,8 +18,37 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y bc bison build-essential curl flex g++-multilib gcc-multilib git gnupg gperf lib32readline-dev lib32z1-dev liblz4-tool libncurses5-dev libssl-dev libxml2-utils squashfs-tools zip
 
-    - name: Start Ngrok SSH Session
-      uses: lhotari/action-ngrok-ssh@v1
-      with:
-        ngrok_auth_token: ${{ secrets.NGROK_TOKEN }}
-        ssh_password: 'build_password_123' # Put any temporary password here
+    - name: Authorize Local SSH Keys
+      run: |
+        mkdir -p ~/.ssh
+        curl -s https://github.com{{ github.actor }}.keys >> ~/.ssh/authorized_keys
+        chmod 700 ~/.ssh
+        chmod 600 ~/.ssh/authorized_keys
+
+    - name: Download and Start Raw Ngrok Tunnel
+      env:
+        NGROK_AUTH_TOKEN: ${{ secrets.NGROK_TOKEN }}
+      run: |
+        # Download official ngrok binary directly
+        curl -s https://equinox.io -o ngrok.zip
+        unzip ngrok.zip
+        chmod +x ./ngrok
+        
+        # Configure token
+        ./ngrok config add-authtoken $NGROK_AUTH_TOKEN
+        
+        # Start tunnel in the background pointing to the standard SSH port (22)
+        ./ngrok tcp 22 --log=stdout > ngrok.log &
+        
+        # Wait a few seconds for the tunnel to establish
+        sleep 5
+        
+        # Extract the public address assigned by ngrok and print it to the logs
+        NGROK_URL=$(curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url')
+        echo "=========================================================="
+        echo " YOUR TERMINAL SSH COMMAND IS:"
+        echo " ssh runner@${NGROK_URL#tcp://}"
+        echo "=========================================================="
+        
+        # Keep the runner active for 6 hours so it doesn't close immediately
+        sleep 6h
