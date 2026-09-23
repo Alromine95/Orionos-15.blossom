@@ -1,5 +1,4 @@
-
-name: Interactive SSH ROM Builder
+name: Ngrok SSH ROM Builder
 on: workflow_dispatch
 
 jobs:
@@ -19,5 +18,8 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y bc bison build-essential curl flex g++-multilib gcc-multilib git gnupg gperf lib32readline-dev lib32z1-dev liblz4-tool libncurses5-dev libssl-dev libxml2-utils squashfs-tools zip
 
-    - name: Launch Live SSH Server
-      uses: mxschmitt/action-tmate@v3
+    - name: Start Ngrok SSH Session
+      uses: lhotari/action-ngrok-ssh@v1
+      with:
+        ngrok_auth_token: ${{ secrets.NGROK_TOKEN }}
+        ssh_password: 'build_password_123' # Put any temporary password here
