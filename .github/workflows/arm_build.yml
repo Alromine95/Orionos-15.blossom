@@ -3,6 +3,7 @@ name: Connect to Arch via Tailscale
 on:
   push:
     branches: [ main ]
+  workflow_dispatch: # This adds a manual "Run workflow" button on GitHub
 
 jobs:
   run-commands:
@@ -14,8 +15,9 @@ jobs:
       - name: Connect to Tailscale Network
         uses: tailscale/github-action@v2
         with:
-          oauth-secret: "" # Leave blank if using auth-key
-          authkey: ${{ secrets.TAILSCALE_AUTH_KEY }}
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:ci
 
       - name: Executing Remote Commands via SSH over Tailscale
         uses: appleboy/ssh-action@v1.0.3
@@ -25,13 +27,5 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT }}
           script: |
-            echo "Directly connected over Tailscale mesh without touching the router!"
+            echo "Successfully connected over Tailscale!"
             uname -a
-
-      - name: Connect to Tailscale Network
-        uses: tailscale/github-action@v2
-        with:
-          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
-          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
-          tags: tag:ci
-
