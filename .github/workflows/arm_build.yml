@@ -1,54 +1,29 @@
-name: Raw Ngrok SSH ROM Builder
-on: workflow_dispatch
+name: Connect to Arch via Tailscale
+
+on:
+  push:
+    branches: [ main ]
 
 jobs:
-  ssh_terminal:
+  run-commands:
     runs-on: ubuntu-latest
     steps:
-    - name: Maximize Storage Space
-      uses: easimon/maximize-build-space@master
-      with:
-        root-reserve-mb: 20480
-        swap-size-mb: 1024
-        remove-dotnet: 'true'
-        remove-android: 'true'
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-    - name: Install Android Build Utilities
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y bc bison build-essential curl flex g++-multilib gcc-multilib git gnupg gperf lib32readline-dev lib32z1-dev liblz4-tool libncurses5-dev libssl-dev libxml2-utils squashfs-tools zip
+      - name: Connect to Tailscale Network
+        uses: tailscale/github-action@v2
+        with:
+          oauth-secret: "" # Leave blank if using auth-key
+          authkey: ${{ secrets.TAILSCALE_AUTH_KEY }}
 
-    - name: Authorize Local SSH Keys
-      run: |
-        mkdir -p ~/.ssh
-        curl -s https://github.com{{ github.actor }}.keys >> ~/.ssh/authorized_keys
-        chmod 700 ~/.ssh
-        chmod 600 ~/.ssh/authorized_keys
-
-    - name: Download and Start Raw Ngrok Tunnel
-      env:
-        NGROK_AUTH_TOKEN: ${{ secrets.NGROK_TOKEN }}
-      run: |
-        # Download official ngrok binary directly
-        curl -s https://equinox.io -o ngrok.zip
-        unzip ngrok.zip
-        chmod +x ./ngrok
-        
-        # Configure token
-        ./ngrok config add-authtoken $NGROK_AUTH_TOKEN
-        
-        # Start tunnel in the background pointing to the standard SSH port (22)
-        ./ngrok tcp 22 --log=stdout > ngrok.log &
-        
-        # Wait a few seconds for the tunnel to establish
-        sleep 5
-        
-        # Extract the public address assigned by ngrok and print it to the logs
-        NGROK_URL=$(curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url')
-        echo "=========================================================="
-        echo " YOUR TERMINAL SSH COMMAND IS:"
-        echo " ssh runner@${NGROK_URL#tcp://}"
-        echo "=========================================================="
-        
-        # Keep the runner active for 6 hours so it doesn't close immediately
-        sleep 6h
+      - name: Executing Remote Commands via SSH over Tailscale
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            echo "Directly connected over Tailscale mesh without touching the router!"
+            uname -a
