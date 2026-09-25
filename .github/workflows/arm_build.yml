@@ -1,31 +1,19 @@
-name: Connect to Arch via Tailscale
+name: Zero-Setup Direct Arch Link
 
 on:
   push:
     branches: [ main ]
-  workflow_dispatch: # This adds a manual "Run workflow" button on GitHub
+  workflow_dispatch:
 
 jobs:
-  run-commands:
+  upterm-connection:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Connect to Tailscale Network
-        uses: tailscale/github-action@v2
+      - name: Set up Secure Direct Upterm Tunnel
+        uses: upterm/upterm-action@v2
         with:
-          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
-          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
-          tags: tag:ci
-
-      - name: Executing Remote Commands via SSH over Tailscale
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.SSH_PORT }}
-          script: |
-            echo "Successfully connected over Tailscale!"
-            uname -a
+          # This tells the cloud runner to pause and wait for your local terminal
+          limit-access-to-actor: false
