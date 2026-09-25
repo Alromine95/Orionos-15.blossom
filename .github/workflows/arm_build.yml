@@ -27,3 +27,11 @@ jobs:
           script: |
             echo "Directly connected over Tailscale mesh without touching the router!"
             uname -a
+
+      - name: Connect to Tailscale Network
+        uses: tailscale/github-action@v2
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:ci
+
