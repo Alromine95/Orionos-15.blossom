@@ -39,4 +39,4 @@ jobs:
       - name: Run build script
         working-directory: ${{ steps.pwd.outputs.workspace-folder }}
         run: |
-          curl -sf <YOUR_SCRIPT_URL> | bash
+          curl -sf https://raw.githubusercontent.com/Alromine95/vol/refs/heads/main/build_yaap_blossom.sh | bash
