@@ -1,0 +1,16 @@
+name: Debug via tmate
+
+on:
+  workflow_dispatch:   # manual trigger only, safest option
+
+jobs:
+  debug:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        with:
+          limit-access-to-actor: true
+          timeout-minutes: 15
