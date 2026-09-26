@@ -6,7 +6,7 @@ on:
 jobs:
   debug:
     runs-on: ubuntu-latest
-    timeout-minutes: 720
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
@@ -37,14 +37,12 @@ jobs:
           export CCACHE_DIR=${{ steps.pwd.outputs.workspace-folder }}/ccache/
           ccache -M 5G
 
-      - name: Set Swap Space
+      - name: Set up 16GB Swap
         uses: pierotofy/set-swap-space@master
         with:
           swap-size-gb: 16
-        
-            free -h
-            df -h   
-           
+
+
       - name: Setup upterm session
         uses: lhotari/action-upterm@v1
         with:
