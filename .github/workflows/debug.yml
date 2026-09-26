@@ -6,7 +6,7 @@ on:
 jobs:
   debug:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 720
     steps:
       - uses: actions/checkout@v4
 
