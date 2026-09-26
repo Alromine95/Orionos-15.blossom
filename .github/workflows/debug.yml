@@ -1,18 +1,43 @@
-
 name: Debug via upterm
- 
+
 on:
   workflow_dispatch:
- 
+
 jobs:
   debug:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
- 
+
+      - name: Cleanup
+        uses: rokibhasansagar/slimhub_actions@main
+
+      - name: Initialize workspace
+        id: pwd
+        run: |
+          mkdir workspace
+          cd workspace
+          echo "workspace-folder=$(pwd)" >> $GITHUB_OUTPUT
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'oracle'
+          java-version: 22
+
+      - name: Prepare the build environment
+        working-directory: ${{ steps.pwd.outputs.workspace-folder }}
+        run: |
+          sudo apt install git aria2 ccache -y
+          sudo curl --create-dirs -L -o /usr/local/bin/repo -O -L https://storage.googleapis.com/git-repo-downloads/repo
+          sudo chmod a+rx /usr/local/bin/repo
+          mkdir ${{ steps.pwd.outputs.workspace-folder }}/ccache
+          export USE_CCACHE=1
+          export CCACHE_DIR=${{ steps.pwd.outputs.workspace-folder }}/ccache/
+          ccache -M 50G
+
       - name: Setup upterm session
         uses: lhotari/action-upterm@v1
         with:
           limit-access-to-actor: true
- 
