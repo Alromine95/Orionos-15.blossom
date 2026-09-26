@@ -36,6 +36,17 @@ jobs:
           distribution: 'oracle'
           java-version: 22
 
+      - name: Install repo tool and build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git aria2 ccache python3 python-is-python3 bc bison build-essential \
+            ccache curl flex g++-multilib gcc-multilib gnupg gperf imagemagick lib32ncurses5-dev \
+            lib32readline-dev lib32z1-dev liblz4-tool libncurses5-dev libsdl1.2-dev libssl-dev \
+            libxml2 libxml2-utils lzop pngcrush rsync schedtool squashfs-tools xsltproc zip zlib1g-dev unzip
+          sudo curl --create-dirs -L -o /usr/local/bin/repo https://storage.googleapis.com/git-repo-downloads/repo
+          sudo chmod a+rx /usr/local/bin/repo
+          repo --version
+
       - name: Run build script
         working-directory: ${{ steps.pwd.outputs.workspace-folder }}
         run: |
