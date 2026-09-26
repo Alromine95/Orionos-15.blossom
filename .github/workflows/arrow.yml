@@ -1,0 +1,42 @@
+name: Build ArrowOS
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cleanup
+        uses: rokibhasansagar/slimhub_actions@main
+
+      - name: Initialize workspace on the large disk
+        id: pwd
+        run: |
+          sudo mkdir -p /mnt/workspace
+          sudo chown -R $USER:$USER /mnt/workspace
+          echo "workspace-folder=/mnt/workspace" >> $GITHUB_OUTPUT
+          df -h
+
+      - name: Create 16GB swap space on /mnt
+        run: |
+          df -h
+          sudo dd if=/dev/zero of=/mnt/swapfile bs=1M count=16384
+          sudo chmod 600 /mnt/swapfile
+          sudo mkswap /mnt/swapfile
+          sudo swapon /mnt/swapfile
+          free -h
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'oracle'
+          java-version: 22
+
+      - name: Run build script
+        working-directory: ${{ steps.pwd.outputs.workspace-folder }}
+        run: |
+          curl -sf <YOUR_SCRIPT_URL> | bash
