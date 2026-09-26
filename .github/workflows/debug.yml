@@ -33,10 +33,18 @@ jobs:
           sudo curl --create-dirs -L -o /usr/local/bin/repo -O -L https://storage.googleapis.com/git-repo-downloads/repo
           sudo chmod a+rx /usr/local/bin/repo
           mkdir ${{ steps.pwd.outputs.workspace-folder }}/ccache
-          export USE_CCACHE=1
+          export USE_CCACHE=0
           export CCACHE_DIR=${{ steps.pwd.outputs.workspace-folder }}/ccache/
-          ccache -M 50G
+          ccache -M 5G
 
+      - name: Set Swap Space
+        uses: pierotofy/set-swap-space@master
+        with:
+          swap-size-gb: 16
+        
+            free -h
+            df -h   
+           
       - name: Setup upterm session
         uses: lhotari/action-upterm@v1
         with:
