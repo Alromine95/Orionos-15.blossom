@@ -25,6 +25,6 @@ jobs:
 
       - name: Launch Pinggy SSH Tunnel
         run: |
-          echo "=== CONNECT VIA THE COMMAND PRINTED BELOW ==="
-          # ⬇️ ROUTING TO THE OFFICIAL TCP OVER 443 FOR REAL SSH PASS-THROUGH
-          ssh -o StrictHostKeyChecking=no -p 443 -R 0:localhost:22 tcp.pinggy.io
+          echo "=== COPY AND RUN THE COMMAND GENERATED BELOW ==="
+          # ⬇️ CHANGED USER TO 'tcp' AND HOOKED BACK TO THE VALID 'a.pinggy.io'
+          ssh -o StrictHostKeyChecking=no -p 443 -R 0:localhost:22 tcp@a.pinggy.io
