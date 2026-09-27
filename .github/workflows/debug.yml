@@ -22,10 +22,10 @@ jobs:
 
       - name: Launch ngrok SSH Tunnel
         run: |
-          curl -s https://amazonaws.com | sudo tee /etc/apt/trusted.gpg.distrib/ngrok.asc >/dev/null
-          echo "deb https://amazonaws.com buster main" | sudo tee /etc/apt/sources.list.d/ngrok.list
-          sudo apt-get update && sudo apt-get install ngrok
+          # ⬇️ CLEAN ONE-LINE INSTALLATION WITHOUT FOLDER ERRORS
+          sudo snap install ngrok
           
+          # Add your token variable
           ngrok config add-authtoken ${{ secrets.NGROK_AUTHTOKEN }}
           
           echo "=== COPY THE SSH COMMAND BELOW ==="
