@@ -17,6 +17,10 @@ jobs:
       - name: Cleanup
         uses: rokibhasansagar/slimhub_actions@main
 
+      # ---------------------------------------------------------
+      # WORKSPACE
+      # ---------------------------------------------------------
+
       - name: Initialize workspace on the large disk
         id: pwd
         run: |
@@ -24,6 +28,10 @@ jobs:
           sudo chown -R "$USER:$USER" /mnt/workspace
           echo "workspace-folder=/mnt/workspace" >> "$GITHUB_OUTPUT"
           df -h
+
+      # ---------------------------------------------------------
+      # SWAP
+      # ---------------------------------------------------------
 
       - name: Create 16GB swap
         run: |
@@ -33,11 +41,19 @@ jobs:
           sudo swapon /mnt/swapfile
           free -h
 
+      # ---------------------------------------------------------
+      # JAVA
+      # ---------------------------------------------------------
+
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: oracle
           java-version: 22
+
+      # ---------------------------------------------------------
+      # DEPENDENCIES
+      # ---------------------------------------------------------
 
       - name: Install dependencies
         run: |
@@ -59,15 +75,12 @@ jobs:
 
           repo --version
 
-            # ---------------------------------------------------------
+      # ---------------------------------------------------------
       # SSH SERVER
       # ---------------------------------------------------------
 
       - name: Configure SSH Server
         run: |
-          sudo apt-get update
-          sudo apt-get install -y openssh-server tmux
-
           sudo systemctl enable ssh
           sudo systemctl start ssh
 
@@ -97,13 +110,13 @@ jobs:
           tags: tag:github-runner
 
       # ---------------------------------------------------------
-      # DEBUG TAILSCALE
+      # CHECK TAILSCALE
       # ---------------------------------------------------------
 
-      - name: Debug Tailscale
+      - name: Check Tailscale
         run: |
           echo "=============================================="
-          echo "TAILSCALE DEBUG"
+          echo "TAILSCALE STATUS"
           echo "=============================================="
 
           echo
@@ -115,15 +128,25 @@ jobs:
           tailscale status
 
           echo
+          echo "=== SELF ==="
+          tailscale status --self
+
+          echo
           echo "=== NETCHECK ==="
           tailscale netcheck || true
 
-          echo
+      # ---------------------------------------------------------
+      # DEBUG SSH
+      # ---------------------------------------------------------
+
+      - name: Debug SSH
+        run: |
           echo "=== SSH PORT ==="
           sudo ss -lntp | grep ':22' || true
 
           echo
-          echo "=============================================="
+          echo "=== SSH SERVICE ==="
+          sudo systemctl status ssh --no-pager || true
 
       # ---------------------------------------------------------
       # DISPLAY SSH INFORMATION
@@ -165,9 +188,8 @@ jobs:
         run: |
           echo "Runner is now available over Tailscale."
           echo "SSH into it from your PC."
-          echo
-          echo "The workflow will remain active."
 
           while true; do
-            sleep 21600
+            echo "Runner alive - $(date)"
+            sleep 60
           done
