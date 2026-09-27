@@ -1,17 +1,32 @@
-name: Send Commands from PC to GitHub Actions
+name: Connect PC to GitHub Actions Cloud Runner
 
 on:
-  workflow_dispatch: # Allows you to trigger this manually from the GitHub website
+  workflow_dispatch:
 
 jobs:
-  interactive-execution:
+  ssh-bridge:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Create Secure Terminal Bridge
-        uses: mxschmitt/action-tmate@v3
-        with:
-          # This keeps the cloud terminal open and waiting for your PC's commands
-          limit-access-to-actor: false
+      - name: Configure SSH Server on Cloud Runner
+        run: |
+          sudo apt-get update && sudo apt-get install -y openssh-server
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PUBLIC_KEY }}" > ~/.ssh/authorized_keys
+          chmod 600 ~/.ssh/authorized_keys
+          
+          # Set a quick temporary password for the runner user just in case
+          echo "runner:password123" | sudo chpasswd
+
+      - name: Launch ngrok SSH Tunnel
+        run: |
+          curl -s https://amazonaws.com | sudo tee /etc/apt/trusted.gpg.distrib/ngrok.asc >/dev/null
+          echo "deb https://amazonaws.com buster main" | sudo tee /etc/apt/sources.list.d/ngrok.list
+          sudo apt-get update && sudo apt-get install ngrok
+          
+          ngrok config add-authtoken ${{ secrets.NGROK_AUTHTOKEN }}
+          
+          echo "=== COPY THE SSH COMMAND BELOW ==="
+          ngrok tcp 22
