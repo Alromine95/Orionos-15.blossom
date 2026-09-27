@@ -59,7 +59,7 @@ jobs:
 
           repo --version
 
-      # ---------------------------------------------------------
+            # ---------------------------------------------------------
       # SSH SERVER
       # ---------------------------------------------------------
 
@@ -81,6 +81,14 @@ jobs:
 
           echo "SSH server ready"
 
+          echo
+          echo "SSH listening:"
+          sudo ss -lntp | grep ':22' || true
+
+      # ---------------------------------------------------------
+      # TAILSCALE
+      # ---------------------------------------------------------
+
       - name: Connect runner to Tailscale
         uses: tailscale/github-action@v4
         with:
@@ -88,13 +96,46 @@ jobs:
           oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
           tags: tag:github-runner
 
+      # ---------------------------------------------------------
+      # DEBUG TAILSCALE
+      # ---------------------------------------------------------
+
+      - name: Debug Tailscale
+        run: |
+          echo "=============================================="
+          echo "TAILSCALE DEBUG"
+          echo "=============================================="
+
+          echo
+          echo "=== IP ==="
+          tailscale ip -4
+
+          echo
+          echo "=== STATUS ==="
+          tailscale status
+
+          echo
+          echo "=== NETCHECK ==="
+          tailscale netcheck || true
+
+          echo
+          echo "=== SSH PORT ==="
+          sudo ss -lntp | grep ':22' || true
+
+          echo
+          echo "=============================================="
+
+      # ---------------------------------------------------------
+      # DISPLAY SSH INFORMATION
+      # ---------------------------------------------------------
+
       - name: Display SSH connection information
         run: |
+          TS_IP=$(tailscale ip -4)
+
           echo "=============================================="
           echo "       GITHUB ACTIONS RUNNER READY"
           echo "=============================================="
-
-          TS_IP=$(tailscale ip -4)
 
           echo
           echo "Tailscale IP:"
@@ -107,18 +148,26 @@ jobs:
           echo
           echo "=============================================="
 
+      # ---------------------------------------------------------
+      # TMUX
+      # ---------------------------------------------------------
+
       - name: Start tmux
         run: |
           tmux new-session -d -s romshell || true
           tmux list-sessions
 
+      # ---------------------------------------------------------
+      # KEEP RUNNER ALIVE
+      # ---------------------------------------------------------
+
       - name: Keep runner alive
         run: |
-          echo
           echo "Runner is now available over Tailscale."
           echo "SSH into it from your PC."
           echo
-          
+          echo "The workflow will remain active."
+
           while true; do
-            sleep 60
+            sleep 21600
           done
