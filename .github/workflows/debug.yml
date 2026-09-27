@@ -9,15 +9,14 @@ on:
 jobs:
   ssh-bridge:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      
-
       - name: Cleanup
         uses: rokibhasansagar/slimhub_actions@main
-        
+
       - name: Initialize workspace on the large disk
         id: pwd
         run: |
@@ -43,13 +42,14 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
+
           sudo apt-get install -y \
             git aria2 ccache python3 python-is-python3 bc bison build-essential \
             curl flex g++-multilib gcc-multilib gnupg gperf imagemagick \
             lib32ncurses-dev lib32readline-dev lib32z1-dev liblz4-tool \
             libncurses-dev libsdl1.2-dev libssl-dev libxml2 libxml2-utils \
             lzop pngcrush rsync schedtool squashfs-tools xsltproc zip \
-            zlib1g-dev unzip
+            zlib1g-dev unzip openssh-server tmux
 
           sudo curl --create-dirs -L \
             -o /usr/local/bin/repo \
@@ -59,19 +59,82 @@ jobs:
 
           repo --version
 
+      # ---------------------------------------------------------
+      # SSH SERVER
+      # ---------------------------------------------------------
 
-      - name: Configure SSH Server on Cloud Runner
+      - name: Configure SSH server
         run: |
-          sudo apt-get update && sudo apt-get install -y openssh-server
+          sudo systemctl enable ssh
+          sudo systemctl start ssh
+
           mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+
           echo "${{ secrets.SSH_PUBLIC_KEY }}" > ~/.ssh/authorized_keys
           chmod 600 ~/.ssh/authorized_keys
-          
-          # Set a quick temporary password for the runner user just in case
-          echo "runner:password123" | sudo chpasswd
-          
-      - name: Launch Pinggy SSH Tunnel
+
+          sudo chown -R "$USER:$USER" ~/.ssh
+
+          echo "SSH server:"
+          sudo systemctl status ssh --no-pager
+
+      # ---------------------------------------------------------
+      # TAILSCALE
+      # ---------------------------------------------------------
+
+      - name: Connect runner to Tailscale
+        uses: tailscale/github-action@v4
+        with:
+          authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
+
+      - name: Show Tailscale SSH address
         run: |
-          echo "=== COPY AND RUN THE COMMAND GENERATED BELOW ==="
-          # ⬇️ CHANGED USER TO 'tcp' AND HOOKED BACK TO THE VALID 'a.pinggy.io'
-          ssh -o StrictHostKeyChecking=no -p 443 -R 0:localhost:22 tcp@a.pinggy.io
+          echo "=========================================="
+          echo " TAILSCALE RUNNER INFORMATION"
+          echo "=========================================="
+
+          echo
+          echo "Tailscale IP:"
+          tailscale ip -4
+
+          echo
+          echo "Tailscale status:"
+          tailscale status
+
+          echo
+          echo "SSH command:"
+          echo "ssh runner@$(tailscale ip -4)"
+
+          echo
+          echo "=========================================="
+
+      # ---------------------------------------------------------
+      # TMUX
+      # ---------------------------------------------------------
+
+      - name: Create persistent tmux session
+        run: |
+          tmux new-session -d -s romshell || true
+
+          echo "=========================================="
+          echo " tmux session: romshell"
+          echo "=========================================="
+
+          tmux list-sessions
+
+      # ---------------------------------------------------------
+      # KEEP RUNNER ALIVE
+      # ---------------------------------------------------------
+
+      - name: Keep runner alive
+        run: |
+          echo "Runner is ready."
+          echo "Connect using the SSH command printed above."
+          echo
+          echo "This workflow will stay alive until GitHub terminates"
+          echo "the runner or the workflow is cancelled."
+
+          while true; do
+            sleep 60
+          done
