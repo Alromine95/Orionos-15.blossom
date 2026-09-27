@@ -1,11 +1,10 @@
 name: Connect PC to GitHub Actions Cloud Runner
 
-# ⬇️ THIS TRIGGERS THE WORKFLOW AUTOMATICALLY ON EVERY COMMIT
 on:
   push:
     branches:
       - main
-  workflow_dispatch: # Keeps the manual run button active just in case
+  workflow_dispatch:
 
 jobs:
   ssh-bridge:
@@ -27,5 +26,5 @@ jobs:
       - name: Launch Pinggy SSH Tunnel
         run: |
           echo "=== CONNECT VIA THE COMMAND PRINTED BELOW ==="
-          # Creates a secure reverse SSH tunnel over standard web traffic rules
-          ssh -o StrictHostKeyChecking=no -R 0:localhost:22 loop@a.pinggy.io
+          # ⬇️ ADDED "-p 443" TO FORCE ROUTING OVER OPEN HTTPS TRAFFIC
+          ssh -o StrictHostKeyChecking=no -p 443 -R 0:localhost:22 loop@a.pinggy.io
