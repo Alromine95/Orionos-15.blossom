@@ -63,8 +63,11 @@ jobs:
       # SSH SERVER
       # ---------------------------------------------------------
 
-      - name: Configure SSH server
+      - name: Configure SSH Server
         run: |
+          sudo apt-get update
+          sudo apt-get install -y openssh-server tmux
+
           sudo systemctl enable ssh
           sudo systemctl start ssh
 
@@ -76,65 +79,46 @@ jobs:
 
           sudo chown -R "$USER:$USER" ~/.ssh
 
-          echo "SSH server:"
-          sudo systemctl status ssh --no-pager
-
-      # ---------------------------------------------------------
-      # TAILSCALE
-      # ---------------------------------------------------------
+          echo "SSH server ready"
 
       - name: Connect runner to Tailscale
         uses: tailscale/github-action@v4
         with:
-          authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:github-runner
 
-      - name: Show Tailscale SSH address
+      - name: Display SSH connection information
         run: |
-          echo "=========================================="
-          echo " TAILSCALE RUNNER INFORMATION"
-          echo "=========================================="
+          echo "=============================================="
+          echo "       GITHUB ACTIONS RUNNER READY"
+          echo "=============================================="
+
+          TS_IP=$(tailscale ip -4)
 
           echo
           echo "Tailscale IP:"
-          tailscale ip -4
-
-          echo
-          echo "Tailscale status:"
-          tailscale status
+          echo "$TS_IP"
 
           echo
           echo "SSH command:"
-          echo "ssh runner@$(tailscale ip -4)"
+          echo "ssh runner@$TS_IP"
 
           echo
-          echo "=========================================="
+          echo "=============================================="
 
-      # ---------------------------------------------------------
-      # TMUX
-      # ---------------------------------------------------------
-
-      - name: Create persistent tmux session
+      - name: Start tmux
         run: |
           tmux new-session -d -s romshell || true
-
-          echo "=========================================="
-          echo " tmux session: romshell"
-          echo "=========================================="
-
           tmux list-sessions
-
-      # ---------------------------------------------------------
-      # KEEP RUNNER ALIVE
-      # ---------------------------------------------------------
 
       - name: Keep runner alive
         run: |
-          echo "Runner is ready."
-          echo "Connect using the SSH command printed above."
           echo
-          echo "This workflow will stay alive until GitHub terminates"
-          echo "the runner or the workflow is cancelled."
-
+          echo "Runner is now available over Tailscale."
+          echo "SSH into it from your PC."
+          echo
+          
           while true; do
             sleep 60
           done
