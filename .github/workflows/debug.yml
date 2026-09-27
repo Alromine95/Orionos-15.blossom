@@ -1,7 +1,11 @@
 name: Connect PC to GitHub Actions Cloud Runner
 
+# ⬇️ THIS TRIGGERS THE WORKFLOW AUTOMATICALLY ON EVERY COMMIT
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - main
+  workflow_dispatch: # Keeps the manual run button active just in case
 
 jobs:
   ssh-bridge:
@@ -20,12 +24,8 @@ jobs:
           # Set a quick temporary password for the runner user just in case
           echo "runner:password123" | sudo chpasswd
 
-      - name: Launch ngrok SSH Tunnel
+      - name: Launch Pinggy SSH Tunnel
         run: |
-          # Install ngrok via snap
-          sudo snap install ngrok
-          
-          echo "=== COPY THE SSH COMMAND BELOW ==="
-          # ⬇️ Bypasses the configuration file bottleneck by passing the token inline
-          sudo ngrok tcp 22 --authtoken=${{ secrets.NGROK_AUTHTOKEN }}
-
+          echo "=== CONNECT VIA THE COMMAND PRINTED BELOW ==="
+          # Creates a secure reverse SSH tunnel over standard web traffic rules
+          ssh -o StrictHostKeyChecking=no -R 0:localhost:22 loop@a.pinggy.io
