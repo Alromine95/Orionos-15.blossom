@@ -1,39 +1,17 @@
-name: Arch Linux Terminal SSH Compilation
+name: Send Commands from PC to GitHub Actions
 
 on:
-  push:
-    branches: [ main ]
-  workflow_dispatch: # Allows manual execution via the GitHub website
+  workflow_dispatch: # Allows you to trigger this manually from the GitHub website
 
 jobs:
-  remote-compile:
+  interactive-execution:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Execute Heavy Compilation via SSH
-        uses: appleboy/ssh-action@v1.0.3
+      - name: Create Secure Terminal Bridge
+        uses: mxschmitt/action-tmate@v3
         with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.SSH_PORT }}
-          
-          # 1. FIX THE TIMEOUT: Allows the compilation to run up to 3 hours
-          command_timeout: 3h
-          
-          # 2. FORCE SYNC: Keeps the connection alive until the script finishes
-          sync: true
-          
-          script: |
-            echo "Successfully connected to Arch Linux terminal via SSH!"
-            echo "Starting compilation process..."
-            
-            # Navigate to your local project directory
-            # cd /path/to/your/compilation/folder
-            
-            # Run your build commands here
-            # make -j$(nproc)
-            
-            echo "Compilation completed successfully!"
+          # This keeps the cloud terminal open and waiting for your PC's commands
+          limit-access-to-actor: false
