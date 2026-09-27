@@ -22,11 +22,14 @@ jobs:
 
       - name: Launch ngrok SSH Tunnel
         run: |
-          # ⬇️ CLEAN ONE-LINE INSTALLATION WITHOUT FOLDER ERRORS
+          # Install ngrok via snap
           sudo snap install ngrok
           
-          # Add your token variable
-          ngrok config add-authtoken ${{ secrets.NGROK_AUTHTOKEN }}
+          # ⬇️ FIX THE PERMISSION DENIED ERROR: Create the folder structure manually
+          mkdir -p /home/runner/.config/ngrok
+          
+          # Authenticate using sudo to bypass sandboxing blocks
+          sudo ngrok config add-authtoken ${{ secrets.NGROK_AUTHTOKEN }}
           
           echo "=== COPY THE SSH COMMAND BELOW ==="
-          ngrok tcp 22
+          sudo ngrok tcp 22
