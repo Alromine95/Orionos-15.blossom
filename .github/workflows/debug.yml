@@ -23,6 +23,47 @@ jobs:
           # Set a quick temporary password for the runner user just in case
           echo "runner:password123" | sudo chpasswd
 
+      - name: Initialize workspace on the large disk
+        id: pwd
+        run: |
+          sudo mkdir -p /mnt/workspace
+          sudo chown -R "$USER:$USER" /mnt/workspace
+          echo "workspace-folder=/mnt/workspace" >> "$GITHUB_OUTPUT"
+          df -h
+
+      - name: Create 16GB swap
+        run: |
+          sudo dd if=/dev/zero of=/mnt/swapfile bs=1M count=16384
+          sudo chmod 600 /mnt/swapfile
+          sudo mkswap /mnt/swapfile
+          sudo swapon /mnt/swapfile
+          free -h
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: oracle
+          java-version: 22
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            git aria2 ccache python3 python-is-python3 bc bison build-essential \
+            curl flex g++-multilib gcc-multilib gnupg gperf imagemagick \
+            lib32ncurses-dev lib32readline-dev lib32z1-dev liblz4-tool \
+            libncurses-dev libsdl1.2-dev libssl-dev libxml2 libxml2-utils \
+            lzop pngcrush rsync schedtool squashfs-tools xsltproc zip \
+            zlib1g-dev unzip
+
+          sudo curl --create-dirs -L \
+            -o /usr/local/bin/repo \
+            https://storage.googleapis.com/git-repo-downloads/repo
+
+          sudo chmod a+rx /usr/local/bin/repo
+
+          repo --version
+        
       - name: Launch Pinggy SSH Tunnel
         run: |
           echo "=== COPY AND RUN THE COMMAND GENERATED BELOW ==="
