@@ -16,11 +16,11 @@ on:
       BUILD_TARGET:
         description: 'Build Target'
         required: true
-        default: 'fox_tornado-bp2a-eng'
+        default: 'twrp_tornado-bp2a-eng'
         type: choice
         options:
           - 'fox_tornado-eng'
-          - 'fox_tornado-bp2a-eng'
+          - 'twrp_tornado-bp2a-eng'
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -93,24 +93,11 @@ jobs:
           set +e
           source build/envsetup.sh
           set -e
-          echo "=== Lunching target: ${{ github.event.inputs.BUILD_TARGET || 'fox_tornado-bp2a-eng' }} ==="
-          lunch ${{ github.event.inputs.BUILD_TARGET || 'fox_tornado-bp2a-eng' }}
+          echo "=== Lunching target: ${{ github.event.inputs.BUILD_TARGET || 'twrp_tornado-bp2a-eng' }} ==="
+          lunch ${{ github.event.inputs.BUILD_TARGET || 'twrp_tornado-bp2a-eng' }}
           echo "=== Building vendorbootimage ==="
-          mka vendorbootimage
+          mka vendorbootimage -j4
 
-      # ---------------------------------------------------------
-      # KEEP RUNNER ALIVE
-      # ---------------------------------------------------------
-
-      - name: Keep runner alive
-        run: |
-          echo "Runner is now available over Tailscale."
-          echo "SSH into it from your PC."
-
-          while true; do
-            echo "Runner alive - $(date)"
-            sleep 60
-          done
 
       - name: Show Build Output
         if: always()
