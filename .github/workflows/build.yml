@@ -60,6 +60,11 @@ jobs:
             libncurses5-dev libncursesw5-dev \
             lz4 cpio liblzma-dev optipng rustc cargo
 
+      - name: Copy prebuilt kernel
+        run: |
+          mkdir -p /tmp/fox/out/target/product/tornado
+          cp /tmp/fox/device/xiaomi/tornado/prebuilt/kernel /tmp/fox/out/target/product/tornado/kernel
+          
       - name: Install repo
         run: |
           mkdir -p ~/.local/bin
