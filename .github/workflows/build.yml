@@ -29,24 +29,17 @@ jobs:
       - name: Checkout Device Tree
         uses: actions/checkout@v4
 
-      - name: Free Disk Space
-        run: |
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /opt/ghc
-          sudo rm -rf /usr/local/lib/android
-          sudo rm -rf /opt/hostedtoolcache/CodeQL
-          sudo apt-get clean
-          sudo docker system prune -af || true
+      - name: Cleanup
+        uses: rokibhasansagar/slimhub_actions@main
+        
 
 
-      - name: Set up Swap Space
+      - name: Create 16GB swap
         run: |
-          sudo swapoff -a
-          sudo rm -f /swapfile
-          sudo fallocate -l 12G /swapfile
-          sudo chmod 600 /swapfile
-          sudo mkswap /swapfile
-          sudo swapon /swapfile
+          sudo dd if=/dev/zero of=/mnt/swapfile bs=1M count=16384
+          sudo chmod 600 /mnt/swapfile
+          sudo mkswap /mnt/swapfile
+          sudo swapon /mnt/swapfile
           free -h
 
       - name: Install Dependencies
