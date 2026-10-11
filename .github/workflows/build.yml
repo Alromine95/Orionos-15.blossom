@@ -98,6 +98,20 @@ jobs:
           echo "=== Building vendorbootimage ==="
           mka vendorbootimage
 
+      # ---------------------------------------------------------
+      # KEEP RUNNER ALIVE
+      # ---------------------------------------------------------
+
+      - name: Keep runner alive
+        run: |
+          echo "Runner is now available over Tailscale."
+          echo "SSH into it from your PC."
+
+          while true; do
+            echo "Runner alive - $(date)"
+            sleep 60
+          done
+
       - name: Show Build Output
         if: always()
         run: |
