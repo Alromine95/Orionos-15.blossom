@@ -59,11 +59,6 @@ jobs:
             python3 python-is-python3 rsync bc gperf libssl-dev \
             libncurses5-dev libncursesw5-dev \
             lz4 cpio liblzma-dev optipng rustc cargo
-
-      - name: Copy prebuilt kernel
-        run: |
-          mkdir -p /tmp/fox/out/target/product/tornado
-          cp /tmp/fox/device/xiaomi/tornado/prebuilt/kernel /tmp/fox/out/target/product/tornado/kernel
           
       - name: Install repo
         run: |
@@ -86,11 +81,13 @@ jobs:
 
       - name: Copy Device Tree
         run: |
-          mkdir -p /tmp/fox/device/xiaomi/tornado
-          rsync -a \
-            --exclude=.git \
-            --exclude=.github \
-            ./ /tmp/fox/device/xiaomi/tornado/
+          git clone https://github.com/heppysingh/ofox_tornado.git -b main /tmp/fox/device/xiaomi/tornado
+
+            
+      - name: Copy prebuilt kernel
+        run: |
+          mkdir -p /tmp/fox/out/target/product/tornado
+          cp /tmp/fox/device/xiaomi/tornado/prebuilt/kernel /tmp/fox/out/target/product/tornado/kernel
 
       - name: Build OrangeFox Recovery
         run: |
