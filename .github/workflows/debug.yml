@@ -8,7 +8,7 @@ on:
 
 jobs:
   ssh-bridge:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-16-core
 
     steps:
       - name: Checkout Code
