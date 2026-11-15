@@ -40,8 +40,16 @@ jobs:
             lzop pngcrush rsync schedtool squashfs-tools xsltproc zip \
             zlib1g-dev unzip
 
-          sudo curl --create-dirs -L -o /usr/local/bin/repo https://googleapis.com
+          sudo curl -fsSL "https://storage.googleapis.com/git-repo-downloads/repo" | base64 -d | sudo tee /usr/local/bin/repo > /dev/null
           sudo chmod a+rx /usr/local/bin/repo
+          head -n 1 /usr/local/bin/repo
+          repo --version
+
+          # Configure Git Identity safely
+          git config --global user.name "abhinav"
+          git config --global user.email "abhinav@example.com"
+          repo --version
+
 
           # Create 200GB sparse Btrfs mount with ZSTD compression & async discard
           sudo mkdir -p /mnt/workspace/build
