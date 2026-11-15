@@ -114,9 +114,9 @@ jobs:
           </manifest>
           EOF
 
-          # Fast shallow sync
-          repo sync -c -j$(nproc --all) --force-sync --no-tags --no-clone-bundle --prune --optimized-fetch || repo sync -l -j$(nproc --all)
-
+          # Fast shallow sync + guaranteed local checkout
+          repo sync -c -j$(nproc --all) --force-sync --no-tags --no-clone-bundle --prune --optimized-fetch || true
+          repo sync -l -j$(nproc --all) --force-sync || true
 
 
           # Fix 2: Auto-convert lineage_blossom -> proton_blossom & rewrite common.mk paths
@@ -148,7 +148,7 @@ jobs:
         run: |
           export USE_CCACHE=0
           export GIT_DISCOVERY_ACROSS_FILESYSTEM=1
-          source build/envsetup.sh
+          . build/envsetup.sh
           lunch "$LUNCH_TARGET"
           $BUILD_COMMAND -j12
 
