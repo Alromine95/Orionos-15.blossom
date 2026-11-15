@@ -45,12 +45,13 @@ jobs:
 
       - name: Enable ZRAM instead of disk swapfile
         run: |
-          sudo swapoff -a || true
-          sudo rm -f /swapfile /mnt/swapfile
-          echo -e "ALGO=zstd\nPERCENT=50" | sudo tee /etc/default/zramswap
-          sudo systemctl restart zramswap
-          swapon --show
-          free -h
+         sudo swapoff -a || true
+         sudo rm -f /swapfile /mnt/swapfile /mnt/workspace/build/swapfile
+         echo 1 | sudo tee /sys/module/zswap/parameters/enabled
+         echo zstd | sudo tee /sys/module/zswap/parameters/compressor
+         sudo btrfs filesystem mkswapfile --size 8G /mnt/workspace/build/swapfile
+         sudo swapon /mnt/workspace/build/swapfile
+         swapon --show && free -h
 
       # ---------------------------------------------------------
       # JAVA
