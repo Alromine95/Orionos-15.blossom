@@ -40,18 +40,27 @@ jobs:
           df -h / /mnt/workspace/build
 
       # ---------------------------------------------------------
-      # ZRAM (ZERO-DISK SWAP)
+      # ZSWAP + COMPACT 6GB SWAPFILE (UBUNTU 22.04 SAFE)
       # ---------------------------------------------------------
 
-      - name: Enable ZRAM instead of disk swapfile
+      - name: Enable zswap and 6GB swapfile
         run: |
-         sudo swapoff -a || true
-         sudo rm -f /swapfile /mnt/swapfile /mnt/workspace/build/swapfile
-         echo 1 | sudo tee /sys/module/zswap/parameters/enabled
-         echo zstd | sudo tee /sys/module/zswap/parameters/compressor
-         sudo btrfs filesystem mkswapfile --size 8G /mnt/workspace/build/swapfile
-         sudo swapon /mnt/workspace/build/swapfile
-         swapon --show && free -h
+          sudo swapoff -a || true
+          sudo rm -f /swapfile /mnt/swapfile /mnt/workspace/swapfile
+
+          # Enable built-in kernel zswap with zstd compression
+          echo 1 | sudo tee /sys/module/zswap/parameters/enabled || true
+          echo zstd | sudo tee /sys/module/zswap/parameters/compressor || true
+
+          # Create compact 6GB swapfile on /mnt/workspace (ext4)
+          sudo fallocate -l 6G /mnt/workspace/swapfile
+          sudo chmod 600 /mnt/workspace/swapfile
+          sudo mkswap /mnt/workspace/swapfile
+          sudo swapon /mnt/workspace/swapfile
+
+          swapon --show
+          free -h
+
 
       # ---------------------------------------------------------
       # JAVA
