@@ -17,31 +17,39 @@ jobs:
       - name: Cleanup
         uses: rokibhasansagar/slimhub_actions@main
 
-      
-
-
       # ---------------------------------------------------------
-      # WORKSPACE
+      # WORKSPACE + BTRFS ZSTD COMPRESSION (JUGAAD)
       # ---------------------------------------------------------
 
-      - name: Initialize workspace on the large disk
+      - name: Initialize compressed Btrfs workspace
         id: pwd
         run: |
-          sudo mkdir -p /mnt/workspace
+          sudo apt-get update
+          sudo apt-get install -y btrfs-progs zram-tools
+
+          sudo mkdir -p /mnt/workspace/build
           sudo chown -R "$USER:$USER" /mnt/workspace
-          echo "workspace-folder=/mnt/workspace" >> "$GITHUB_OUTPUT"
-          df -h
+
+          # Create 200GB sparse Btrfs container with ZSTD compression & async discard
+          truncate -s 200G /mnt/workspace/rom.img
+          mkfs.btrfs -f /mnt/workspace/rom.img
+          sudo mount -o loop,compress=zstd:3,noatime,discard=async /mnt/workspace/rom.img /mnt/workspace/build
+          sudo chown -R "$USER:$USER" /mnt/workspace/build
+
+          echo "workspace-folder=/mnt/workspace/build" >> "$GITHUB_OUTPUT"
+          df -h / /mnt/workspace/build
 
       # ---------------------------------------------------------
-      # SWAP
+      # ZRAM (ZERO-DISK SWAP)
       # ---------------------------------------------------------
 
-      - name: Create 16GB swap
+      - name: Enable ZRAM instead of disk swapfile
         run: |
-          sudo dd if=/dev/zero of=/mnt/swapfile bs=1M count=16384
-          sudo chmod 600 /mnt/swapfile
-          sudo mkswap /mnt/swapfile
-          sudo swapon /mnt/swapfile
+          sudo swapoff -a || true
+          sudo rm -f /swapfile /mnt/swapfile
+          echo -e "ALGO=zstd\nPERCENT=50" | sudo tee /etc/default/zramswap
+          sudo systemctl restart zramswap
+          swapon --show
           free -h
 
       # ---------------------------------------------------------
@@ -60,8 +68,6 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo apt-get update
-
           sudo apt-get install -y \
             git aria2 ccache python3 python-is-python3 bc bison build-essential \
             curl flex g++-multilib gcc-multilib gnupg gperf imagemagick \
@@ -75,11 +81,10 @@ jobs:
             https://storage.googleapis.com/git-repo-downloads/repo
 
           sudo chmod a+rx /usr/local/bin/repo
-
           repo --version
 
       # ---------------------------------------------------------
-      # SSH SERVER
+      # SSH SERVER WITH PASSWORD + KEY AUTH
       # ---------------------------------------------------------
 
       - name: Configure SSH Server
@@ -90,15 +95,25 @@ jobs:
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
 
-          echo "${{ secrets.SSH_PUBLIC_KEY }}" > ~/.ssh/authorized_keys
-          chmod 600 ~/.ssh/authorized_keys
+          if [ -n "${{ secrets.SSH_PUBLIC_KEY }}" ]; then
+            echo "${{ secrets.SSH_PUBLIC_KEY }}" > ~/.ssh/authorized_keys
+            chmod 600 ~/.ssh/authorized_keys
+          fi
 
           sudo chown -R "$USER:$USER" ~/.ssh
 
-          echo "SSH server ready"
+          # Generate a secure random password for this runner session
+          SSH_PASS=$(openssl rand -base64 12)
+          echo "runner:$SSH_PASS" | sudo chpasswd
+          echo "SSH_PASS=$SSH_PASS" >> "$GITHUB_ENV"
 
-          echo
-          echo "SSH listening:"
+          # Enable password login in sshd_config
+          sudo sed -i 's/^#*PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config
+          sudo sed -i 's/^#*KbdInteractiveAuthentication.*/KbdInteractiveAuthentication yes/' /etc/ssh/sshd_config
+          sudo rm -f /etc/ssh/sshd_config.d/*cloudimg*.conf
+          sudo systemctl restart ssh
+
+          echo "SSH server ready"
           sudo ss -lntp | grep ':22' || true
 
       # ---------------------------------------------------------
@@ -113,46 +128,7 @@ jobs:
           tags: tag:github-runner
 
       # ---------------------------------------------------------
-      # CHECK TAILSCALE
-      # ---------------------------------------------------------
-
-      - name: Check Tailscale
-        run: |
-          echo "=============================================="
-          echo "TAILSCALE STATUS"
-          echo "=============================================="
-
-          echo
-          echo "=== IP ==="
-          tailscale ip -4
-
-          echo
-          echo "=== STATUS ==="
-          tailscale status
-
-          echo
-          echo "=== SELF ==="
-          tailscale status --self
-
-          echo
-          echo "=== NETCHECK ==="
-          tailscale netcheck || true
-
-      # ---------------------------------------------------------
-      # DEBUG SSH
-      # ---------------------------------------------------------
-
-      - name: Debug SSH
-        run: |
-          echo "=== SSH PORT ==="
-          sudo ss -lntp | grep ':22' || true
-
-          echo
-          echo "=== SSH SERVICE ==="
-          sudo systemctl status ssh --no-pager || true
-
-      # ---------------------------------------------------------
-      # DISPLAY SSH INFORMATION
+      # DISPLAY SSH INFORMATION (WITH PASSWORD)
       # ---------------------------------------------------------
 
       - name: Display SSH connection information
@@ -162,16 +138,18 @@ jobs:
           echo "=============================================="
           echo "       GITHUB ACTIONS RUNNER READY"
           echo "=============================================="
-
-          echo
+          echo ""
           echo "Tailscale IP:"
           echo "$TS_IP"
-
-          echo
+          echo ""
           echo "SSH command:"
           echo "ssh runner@$TS_IP"
-
-          echo
+          echo ""
+          echo "Password:"
+          echo "$SSH_PASS"
+          echo ""
+          echo "Build folder (ZSTD Compressed):"
+          echo "/mnt/workspace/build"
           echo "=============================================="
 
       # ---------------------------------------------------------
@@ -180,7 +158,7 @@ jobs:
 
       - name: Start tmux
         run: |
-          tmux new-session -d -s romshell || true
+          tmux new-session -d -s romshell -c /mnt/workspace/build || true
           tmux list-sessions
 
       # ---------------------------------------------------------
