@@ -1,121 +1,167 @@
-name: Build OrangeFox Recovery
+name: Automated ProtonPlus ROM Builder (All Fixes Included)
 
 on:
   workflow_dispatch:
-    inputs:
-      MANIFEST_BRANCH:
-        description: 'OrangeFox Manifest Branch (e.g. 12.1, 14.1, 11.0,16.0)'
-        required: true
-        default: '16.0'
-        type: choice
-        options:
-          - '12.1'
-          - '14.1'
-          - '11.0'
-          - '16.0'
-      BUILD_TARGET:
-        description: 'Build Target'
-        required: true
-        default: 'twrp_tornado-bp2a-eng'
-        type: choice
-        options:
-          - 'fox_tornado-eng'
-          - 'twrp_tornado-bp2a-eng'
+  push:
+    branches:
+      - main
+
+env:
+  # =========================================================
+  # 1. FILL IN ONLY REPO_INIT & YOUR LOCAL MANIFEST BELOW
+  # =========================================================
+  REPO_INIT: "repo init -u https://github.com/ProtonPlus-ORG/manifest -b tm-qpr3"
+  LUNCH_TARGET: "proton_blossom-eng"
+  BUILD_COMMAND: "m otapackage"
+
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  build-rom:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 355
 
     steps:
-      - name: Checkout Device Tree
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Cleanup
+      - name: Reclaim Runner Disk Space (~20GB)
         uses: rokibhasansagar/slimhub_actions@main
-        
 
-
-      - name: Create 16GB swap
-        run: |
-          sudo dd if=/dev/zero of=/mnt/swapfile bs=1M count=16384
-          sudo chmod 600 /mnt/swapfile
-          sudo mkswap /mnt/swapfile
-          sudo swapon /mnt/swapfile
-          free -h
-
-      - name: Install Dependencies
+      # ---------------------------------------------------------
+      # 2. SETUP 200GB BTRFS ZSTD COMPRESSION + ZSWAP (JUGAAD)
+      # ---------------------------------------------------------
+      - name: Setup Compressed Btrfs Workspace & Memory
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            git-core gnupg flex bison build-essential zip curl \
-            zlib1g-dev gcc-multilib g++-multilib libc6-dev-i386 \
-            lib32z1-dev libxml2-utils xsltproc unzip \
-            python3 python-is-python3 rsync bc gperf libssl-dev \
-            libncurses5-dev libncursesw5-dev \
-            lz4 cpio liblzma-dev optipng rustc cargo
-          
-      - name: Install repo
-        run: |
-          mkdir -p ~/.local/bin
-          curl -L https://storage.googleapis.com/git-repo-downloads/repo -o ~/.local/bin/repo
-          chmod +x ~/.local/bin/repo
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
+            btrfs-progs git aria2 python3 python-is-python3 bc bison build-essential \
+            curl flex g++-multilib gcc-multilib gnupg gperf imagemagick \
+            lib32ncurses-dev lib32readline-dev lib32z1-dev liblz4-tool \
+            libncurses-dev libsdl1.2-dev libssl-dev libxml2 libxml2-utils \
+            lzop pngcrush rsync schedtool squashfs-tools xsltproc zip \
+            zlib1g-dev unzip
 
-      - name: Sync OrangeFox Sources
-        run: |
-          git config --global user.name "OrangeFox Builder"
-          git config --global user.email "builder@orangefox.tech"
-          git config --global color.ui true
+          sudo curl --create-dirs -L -o /usr/local/bin/repo https://googleapis.com
+          sudo chmod a+rx /usr/local/bin/repo
 
-          mkdir -p /tmp/sync_tools
-          cd /tmp/sync_tools
-          git clone https://gitlab.com/OrangeFox/sync.git
-          cd sync
-          ./orangefox_sync.sh --branch ${{ github.event.inputs.MANIFEST_BRANCH || '16.0' }} --path /tmp/fox
+          # Create 200GB sparse Btrfs mount with ZSTD compression & async discard
+          sudo mkdir -p /mnt/workspace/build
+          sudo chown -R "$USER:$USER" /mnt/workspace
+          truncate -s 200G /mnt/workspace/rom.img
+          mkfs.btrfs -f /mnt/workspace/rom.img
+          sudo mount -o loop,compress=zstd:3,noatime,discard=async /mnt/workspace/rom.img /mnt/workspace/build
+          sudo chown -R "$USER:$USER" /mnt/workspace/build
 
-      - name: Copy Device Tree
-        run: |
-          git clone https://github.com/heppysingh/ofox_tornado.git -b main /tmp/fox/device/xiaomi/tornado
+          # Enable built-in kernel zswap + compact 6GB swapfile (Azure kernel safe)
+          sudo swapoff -a || true
+          sudo rm -f /swapfile /mnt/swapfile
+          echo 1 | sudo tee /sys/module/zswap/parameters/enabled || true
+          echo zstd | sudo tee /sys/module/zswap/parameters/compressor || true
+          sudo fallocate -l 6G /mnt/workspace/swapfile
+          sudo chmod 600 /mnt/workspace/swapfile
+          sudo mkswap /mnt/workspace/swapfile
+          sudo swapon /mnt/workspace/swapfile
 
-            
-      - name: Copy prebuilt kernel
-        run: |
-          mkdir -p /tmp/fox/out/target/product/tornado
-          cp /tmp/fox/device/xiaomi/tornado/prebuilt/kernel /tmp/fox/out/target/product/tornado/kernel
+          df -h / /mnt/workspace/build
+          free -h
 
-      - name: Build OrangeFox Recovery
+      # ---------------------------------------------------------
+      # 3. REPO INIT + LOCAL MANIFEST + SHALLOW SYNC + AUTO-PATCHES
+      # ---------------------------------------------------------
+      - name: Initialize, Sync & Auto-Patch Device Tree
+        working-directory: /mnt/workspace/build
         run: |
-          cd /tmp/fox
-          set +e
+          $REPO_INIT
+
+          # Paste your local manifest XML right between the EOF lines below:
+          mkdir -p .repo/local_manifests
+          cat << 'EOF' > .repo/local_manifests/roomservice.xml
+          <?xml version="1.0" encoding="UTF-8"?>
+          <manifest>
+
+          <remote name="t25" fetch="https://github.com/TelegramAt25" />
+          <remote name="25ji" fetch="https://github.com/25ji-Telegram-de" />
+          <remote name="astechpro20" fetch="https://github.com/AsTechpro20" />
+          <remote name="LOS" fetch="https://github.com/LineageOS" />
+
+          <!-- Device Trees -->
+          <project path="device/xiaomi/blossom" name="android_device_xiaomi_blossom" remote="astechpro20" revision="lineage-20" />
+
+          <!-- SELinux Policies -->
+          <project path="device/mediatek/sepolicy_vndr" name="android_device_mediatek_sepolicy_vndr" remote="LOS" revision="lineage-20" />
+  
+          <!-- Hardware Supports -->
+          <project path="hardware/mediatek" name="android_hardware_mediatek" remote="t25" revision="lineage-20_blossom" />
+
+          <!-- Kernel Trees -->
+          <project path="device/xiaomi/blossom-kernel" name="device_xiaomi_blossom-kernel" remote="t25" revision="lineage-20">
+           <linkfile src="headers" dest="kernel/xiaomi/blossom" />
+          </project>
+
+          <!-- Vendor Trees -->
+          <project path="vendor/xiaomi/blossom" name="proprietary_vendor_xiaomi_blossom" remote="t25" revision="lineage-20" />
+
+          <!-- RevampedFMRadio -->
+          <project path="packages/apps/RevampedFMRadio" name="android_packages_apps_RevampedFMRadio" remote="25ji" revision="tomfoolery" />
+
+          </manifest>
+          EOF
+
+          # Fast shallow sync
+          repo sync -c -j$(nproc --all) --force-sync --no-tags --no-clone-bundle --prune --optimized-fetch || repo sync -l -j$(nproc --all)
+
+
+
+          # Fix 2: Auto-convert lineage_blossom -> proton_blossom & rewrite common.mk paths
+          if [ -d "device/xiaomi/blossom" ]; then
+            cd device/xiaomi/blossom
+            [ -f "lineage_blossom.mk" ] && mv lineage_blossom.mk proton_blossom.mk
+            sed -i 's/lineage_blossom/proton_blossom/g' AndroidProducts.mk proton_blossom.mk
+            find . -type f -exec sed -i \
+              -e 's|vendor/lineage/config/common_full_phone.mk|vendor/proton/config/common.mk|g' \
+              -e 's|vendor/lineage/config/common.mk|vendor/proton/config/common.mk|g' \
+              -e 's|vendor/lineage|vendor/proton|g' {} +
+            cd /mnt/workspace/build
+          fi
+
+      # ---------------------------------------------------------
+      # 4. WIPE .REPO & TRIM BLOCKS (SAVES ~35-45 GB)
+      # ---------------------------------------------------------
+      - name: Delete .repo and Reclaim Disk Space
+        run: |
+          rm -rf /mnt/workspace/build/.repo
+          sudo fstrim -v /mnt/workspace/build
+          df -h / /mnt/workspace/build
+
+      # ---------------------------------------------------------
+      # 5. COMPILE ROM
+      # ---------------------------------------------------------
+      - name: Build ROM
+        working-directory: /mnt/workspace/build
+        run: |
+          export USE_CCACHE=0
+          export GIT_DISCOVERY_ACROSS_FILESYSTEM=1
           source build/envsetup.sh
-          set -e
-          echo "=== Lunching target: ${{ github.event.inputs.BUILD_TARGET || 'twrp_tornado-bp2a-eng' }} ==="
-          lunch ${{ github.event.inputs.BUILD_TARGET || 'twrp_tornado-bp2a-eng' }}
-          echo "=== Building vendorbootimage ==="
-          mka vendorbootimage -j4
+          lunch "$LUNCH_TARGET"
+          $BUILD_COMMAND -j12
 
-
-      - name: Show Build Output
-        if: always()
+      # ---------------------------------------------------------
+      # 6. UPLOAD FINISHED ZIP AUTOMATICALLY TO PIXELDRAIN & GOFILE
+      # ---------------------------------------------------------
+      - name: Upload ROM ZIP
+        working-directory: /mnt/workspace/build
         run: |
-          find /tmp/fox/out/target/product/tornado -maxdepth 2 -type f || true
+          ZIP_FILE=$(ls -t out/target/product/blossom/*.zip | grep -v "ota" | head -n 1)
+          [ -z "$ZIP_FILE" ] && ZIP_FILE=$(ls -t out/target/product/blossom/*.zip | head -n 1)
 
-      - name: Fix Permissions
-        if: always()
-        run: |
-          sudo chown -R runner:runner /tmp/fox/out || true
-          sudo chmod -R a+rX /tmp/fox/out || true
+          echo "=============================================="
+          echo "FOUND ROM ZIP: $ZIP_FILE"
+          echo "=============================================="
 
-      - name: Upload Artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: OrangeFox-tornado
-          if-no-files-found: warn
-          path: |
-            /tmp/fox/out/target/product/tornado/OrangeFox*.zip
-            /tmp/fox/out/target/product/tornado/OrangeFox*.img
-            /tmp/fox/out/target/product/tornado/vendor_boot.img
-            /tmp/fox/out/target/product/tornado/vendorboot.img
-            /tmp/fox/out/target/product/tornado/vendor_ramdisk_recovery.cpio
-            /tmp/fox/out/target/product/tornado/recovery.img
-            /tmp/fox/out/target/product/tornado/boot.img
+          echo "Uploading to PixelDrain..."
+          curl -T "$ZIP_FILE" https://pixeldrain.com
+          echo ""
+
+          echo "Uploading backup copy to GoFile..."
+          SERVER=$(curl -s https://gofile.io | grep -o '"name":"[^"]*"' | head -n 1 | cut -d'"' -f4)
+          curl -F "file=@$ZIP_FILE" "https://${SERVER}.gofile.io/contents/uploadfile"
+          echo ""
