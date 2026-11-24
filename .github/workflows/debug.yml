@@ -114,7 +114,7 @@ jobs:
           sudo chown -R "$USER:$USER" ~/.ssh
 
           # Generate a secure random password for this runner session
-          SSH_PASS=$(openssl rand -base64 12)
+          SSH_PASS=$(openssl rand -hex 12)
           echo "runner:$SSH_PASS" | sudo chpasswd
           echo "SSH_PASS=$SSH_PASS" >> "$GITHUB_ENV"
 
