@@ -157,6 +157,7 @@ jobs:
           echo "ssh runner@$TS_IP"
           echo ""
           echo "Password:"
+          echo "Password is: ${SSH_PASS}"
           echo "$SSH_PASS"
           echo ""
           echo "Build folder (ZSTD Compressed):"
